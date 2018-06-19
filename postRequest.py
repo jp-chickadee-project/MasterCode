@@ -1,18 +1,28 @@
-import time
-import serial
-import sys
-import json
-import requests
+import time, serial, sys, json, requests
 import RPi.GPIO as GPIO
+
+
+# Do these need to be in Main? Do not think so... These should set up the pin(s) for communicating data
+GPIO.setup(23, GPIO.OUT)
+GPIO.output(23, False)
+port_RFID = serial.Serial('/dev/serial0', 9600) #this will either stay here or relocate inside compielRFID method.
+STARTBIT_RFID = '\x02'
 
 
 SERVER_API = "http://euclid.nmu.edu:18155/api/visits/"
 DATA =         #Figure out how to auto-fill 'data' section of post() request. maybe use a method to compile it and once compiled put back into
 
+
+def compileRFID(ID, feederID, visitTimestamp, temp, mass, bandCombo):
+    #figure out how the data is coming in from the RFID reader.. Parse the data
+    #Hopeufully data will be 'grouped'. set groups to specified vars.
+
+    data_RFID = serial.Serial('/dev/serial0', 9600)
+    data_RFID = str(data_RFID.strip(startBit_RFID))
+
+
 def main():
-    GPIO.setup(23, GPIO.OUT)
-    GPIO.output(23, False)
-    port_RFID = serial.Serial('/dev/serial0', 9600)
+
 
     readCounter = 0
     ID = ""
