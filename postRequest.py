@@ -6,7 +6,7 @@ import RPi.GPIO as GPIO
 GPIO.setup(23, GPIO.OUT)
 GPIO.output(23, False)
 port_RFID = serial.Serial('/dev/serial0', 9600) #this will either stay here or relocate inside compielRFID method.
-STARTBIT_RFID = '\x02'
+STARTBIT_RFID = '\x02' #hard coded rfid tag beginning.. Cannot have this for final
 
 
 SERVER_API = "http://euclid.nmu.edu:18155/api/visits/"
@@ -18,8 +18,8 @@ def compileRFID(ID, feederID, visitTimestamp, temp, mass, bandCombo):
     #Hopeufully data will be 'grouped'. set groups to specified vars.
 
     data_RFID = serial.Serial('/dev/serial0', 9600)
-    data_RFID = str(data_RFID.strip(startBit_RFID))
-
+    data_RFID = str(data_RFID.strip(startBit_RFID)) #strip off starting '\x02', leaving only the tag number
+    
 
 def main():
 
