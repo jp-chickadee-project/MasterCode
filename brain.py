@@ -4,11 +4,18 @@ import sys
 import subprocess
 import json
 import requests
+import shutil
+import os
 import RPi.GPIO as GPIO
 from hx711 import HX711
 #import mastaCode
 #import RFID
 
+
+PortRF = serial.Serial('/dev/serial0',9600, timeout=.1)     # /dev/serial0 is the RFID setup..
+backupDirectory = "/home/pi/MasterCode/backup/log.out"
+transmitDirectory = "/home/pi/MasterCode/transmit/log.out"
+logFilePath = "/home/pi/MasterCode/log.out"
 
 
 def cleanAndExit():
@@ -18,7 +25,7 @@ def cleanAndExit():
 
 
 def sendData():
-    subprocess.run(["./home/pi/lmic-rpi-lora-gps-hat/examples/transmit/build/transmit.out"])
+    subprocess.Popen(["/home/pi/lmic-rpi-lora-gps-hat/examples/transmit/build/transmit.out"], stdout=subprocess.DEVNULL)
 
 
 # Enable the RFID tag and associating GPIO pins
@@ -92,28 +99,79 @@ def fetchData():
             GPIO.output(23, False)
             PortRF.flushInput()
 
+def logStuff():
+    shutil.copyfile(logFilePath, backupDirectory) #new
+    shutil.copyfile(logFilePath, transmitDirectory)   #ne
+    if os.path.exists("/home/pi/MasterCode/log.out"):   #new
+        os.remove(logFilePath)  #new
 
-def scan():
+
+def scan(logOutput):
     hx = HX711(5, 6)
     hx.set_reading_format("LSB", "MSB")
     hx.set_reference_unit(592)
     hx.reset()
     hx.tare()
+   
+    readCounter = 0
+    ID = ""
+    prevID = ""
+    prevTime = 0
 
     while True:
-        val = hx.get_weight(5)
-        print(val)
-        hx.power_down() 
-        hx.power_up()
-        time.sleep(0.5)
+        if readCounter < 10:
+            print("////////////////////////////////////////////////")
+            val = hx.get_weight(1) #uncomment
+            val2 = hx.get_weight(1) #uncomment
+            if val2 < val: #uncomment
+                val = val2 #uncomment
+            #val = 60
+            #if hx.get_weight(5) > 50:
+            if val > 50 or val < -50:
+                read_byte = PortRF.read()
+                if read_byte:
+                    if read_byte==b'\x02':
+                        for bCounter in range(10):
+                            read_byte=PortRF.read()
+                            ID = ID + read_byte.decode("utf-8")
+                else:
+                    ID = "1111111111"
+
+                timeStamp = (int)(time.time())
+                if ID == prevID and timeStamp - prevTime < 1:
+                    #GPIO.output(23, False)
+                    #time.sleep(.500)
+                    PortRF.flushInput()
+                    ID = ""
+
+                else:
+                    readCounter+=1
+                    prevID = ID
+                    prevTime = timeStamp
+                    logOutput.write('%s' % (ID) + '\n')
+
+
+            print ('%d:%s' % (readCounter, ID))     # These prints are for testing
+            print("timestamp: ", prevTime)
+            print(val)
+            ID = ""
+            PortRF.flushInput()
+            hx.power_down()
+            time.sleep(.4)
+            hx.power_up()
+        else:
+            logOutput.close()
+            logStuff()
+            logOutput = open("log.out", "a")    #will overwrite the current log.out file if one exists, or create one if DNE
+            readCounter = 0
 
 
 def main():
     print("Here is Main routine")
-    scan()
-    while(True):
-        rfidSensorSetup()
-        fetchData()
+    #sendData()
+    logOutput = open("log.out", "a")   # This is the log file that will store the RFID 'ID' and a timestamp associated with it.
+    scan(logOutput)
+    logStuff()
 
 if __name__ == '__main__':
     try:
