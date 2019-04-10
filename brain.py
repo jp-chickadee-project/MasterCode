@@ -7,15 +7,20 @@ import requests
 import shutil
 import os
 import RPi.GPIO as GPIO
+import re
 from hx711 import HX711
+
 #import mastaCode
 #import RFID
 
 # change log.out. Will only need the filepath, not a hardcoded .out file.
 PortRF = serial.Serial('/dev/serial0',9600)     # /dev/serial0 is the RFID setup..
-backupDirectory = "/home/pi/MasterCode/backup/log.out"
-transmitDirectory = "/home/pi/MasterCode/transmit/log.out"
-logFilePath = "/home/pi/MasterCode/log.out"
+backupDirectory = "/home/pi/MasterCode/backup/log0.out"
+transmitDirectory = "/home/pi/MasterCode/transmit/log0.out"
+logFilePath = "/home/pi/MasterCode/log0.out"
+
+backup2Directory = "/home/pi/MasterCode/backup/"
+transmit2Directory = "/home/pi/MasterCode/transmit/"
 
 
 def cleanAndExit():
@@ -50,10 +55,10 @@ def loadcellSetup():
 def getOnFile(): # Possibly return True here??
     for file in os.listdir("/home/pi/MasterCode/"):
         if file.endswith(".txt"):
-            print("Found on.txt")
+            print("Found on.txt. Not calling c-code transmit.")
             return True
 
-def getTranLogFile():
+def getTranLogFile(): # Gets most recent log.out file.
     tmp = 0
     for file in os.listdir("/home/pi/MasterCode/transmit/"):
         for char in file:
@@ -98,7 +103,7 @@ def fetchData():
                 GPIO.output(12, True)
                 readCounter += 1
                 #print ('%d:%s:%a' %(readCounter, ID, timeStamp))
-                logOutput = open("log.out", "a")   # This is the log file that will store the RFID 'ID' and a timestamp associated with it.
+                logOutput = open("log0.out", "a")   # This is the log file that will store the RFID 'ID' and a timestamp associated with it.
                 logOutput.write('%s''%s' % (ID,prevTime) + '\n')
                 #logOutput.write(' time: %d' % (prevTime) + '\n')
                 print ('%d:%s' % (readCounter, ID))     # These prints are for testing
@@ -125,21 +130,42 @@ def fetchData():
             logFileCount += 1
             logOutput.close()
             logStuff()
-            if getOnFile():
-                break
-            else:
-                print("logFileCount: ",logFileCount)
+            print("logFileCount: ",logFileCount)
+            if not getOnFile():
                 sendData()
-                logOutput = open("log.out", "a")    #will overwrite the current log.out file if one exists, or create one if DNE
-                readCounter = 0
+            
+            logOutput = open("log0.out", "a")    #will overwrite the current log.out file if one exists, or create one if DNE
+            readCounter = 0
 
+def replacer(s, newstring, index, nofail=False):
+    # insert the new string between "slices" of the original
+    return s[:index] + newstring + s[index + 1:]
 
 
 def logStuff():
-    shutil.copyfile(logFilePath, backupDirectory) #new
-    shutil.copyfile(logFilePath, transmitDirectory)   #ne
-    if os.path.exists("/home/pi/MasterCode/log.out"):   #new
-        os.remove(logFilePath)  #new
+    #shutil.move(logFilePath,backup2Directory,copy2(l)) # figure out how to rename file to incorporate getTransFile() return for correct save number. Make a global string??
+    tmpString = "log0.out"
+    tmp = ""
+    if int(getTranLogFile()) > 0:
+        newestLogNum = getTranLogFile()
+        newestLogNum = int(newestLogNum) + 1
+        tmp = replacer(tmpString, str(newestLogNum), 3)
+        shutil.copyfile(tmp, transmit2Directory)    # tmp will be the newest log file from the transmit dir.(it wont exist as that in the MasterCode dir). I need to grab the log0.out file from Mastercode dir and name it with the scheme from above only when saving it into the transmit dir and backup dir
+        print("tmp: ", tmp)
+
+    '''
+    tmpString = logFilePath
+    ret = re.search(r'(\d+)',tmpString) # finds the current log count and returns it as an int. ie. log3.out will return 3
+    if ret:
+        ret = ret.group()
+        ret = int(ret) + 1 
+        print("ret: ", ret)
+    '''
+    shutil.copyfile(tmp, backup2Directory)
+    shutil.copyfile(logFilePath, backupDirectory)
+    shutil.copyfile(logFilePath, transmitDirectory)
+    if os.path.exists("/home/pi/MasterCode/log0.out"):
+        os.remove(logFilePath)
 
 
 def scan(logOutput):
