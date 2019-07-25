@@ -147,7 +147,7 @@ def logStuff():
     
     tmpString = "log0.out"
     tmp = ""
-    if int(getTranLogFile()) > 0:
+    if int(getTranLogFile()) >= 0:
         newestLogNum = getTranLogFile()
         newestLogNum = int(newestLogNum) + 1
         tmp = replacer(tmpString, str(newestLogNum), 3) # new file name to save as into /backup and /transmit
