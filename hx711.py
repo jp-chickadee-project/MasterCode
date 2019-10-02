@@ -111,7 +111,8 @@ class HX711:
         np_arr8 = self.read_np_arr8()
         np_arr32 = np_arr8.view('uint32')
         self.lastVal = np_arr32
-
+#        print(np_arr8)
+ #       print(np_arr32)
         return self.lastVal
 
     def read_average(self, times=3):
@@ -122,7 +123,9 @@ class HX711:
         return values / times
 
     def get_value(self, times=3):
-        return self.read_average(times) - self.OFFSET
+        val = self.read_average(times) - self.OFFSET
+        #print(val)
+        return val
 
     def get_weight(self, times=3):
         value = self.get_value(times)
@@ -137,6 +140,7 @@ class HX711:
 
         value = self.read_average(times)
         self.set_offset(value)
+        print(value)
 
         self.set_reference_unit(reference_unit)
 

@@ -8,13 +8,14 @@ import shutil
 import os
 import RPi.GPIO as GPIO
 import re
+import voltIn
 from hx711 import HX711
 
 #import mastaCode
 #import RFID
 
 # change log.out. Will only need the filepath, not a hardcoded .out file.
-PortRF = serial.Serial('/dev/serial0',9600)     # /dev/serial0 is the RFID setup..
+PortRF = serial.Serial('/dev/serial0', 9600, timeout=.2)     # /dev/serial0 is the RFID setup..
 backupDirectory = "/home/pi/MasterCode/backup/log0.out"
 transmitDirectory = "/home/pi/MasterCode/transmit/log0.out"
 logFilePath = "/home/pi/MasterCode/log0.out"
@@ -83,7 +84,7 @@ def fetchData():
     logFileCount = 0
 
     while True:
-        if readCounter < 3:
+        if readCounter < 5:
             read_byte = PortRF.read()
             if read_byte==b'\x02':
                 for bCounter in range(10):
@@ -176,7 +177,7 @@ def logStuff():
         os.remove(logFilePath)
     '''
 
-def scan(logOutput):
+def scan():
     hx = HX711(5, 6)
     hx.set_reading_format("LSB", "MSB")
     hx.set_reference_unit(592)
@@ -187,9 +188,12 @@ def scan(logOutput):
     ID = ""
     prevID = ""
     prevTime = 0
+    logFileCount = 0
+
+    logOutput = open("log0.out", "a")
 
     while True:
-        if readCounter < 3:
+        if readCounter < 100:
             print("////////////////////////////////////////////////")
             val = hx.get_weight(1) #uncomment
             val2 = hx.get_weight(1) #uncomment
@@ -198,31 +202,38 @@ def scan(logOutput):
             #val = 60
             #if hx.get_weight(5) > 50:
             if val > 50 or val < -50:
+                print("/////BIRD ON LOADCELL/////")
+                print("/////SCANNING FOR RFID/////")
                 read_byte = PortRF.read()
                 if read_byte:
                     if read_byte==b'\x02':
+                        print("/////BIRD HAS RFID/////")
                         for bCounter in range(10):
                             read_byte=PortRF.read()
                             ID = ID + read_byte.decode("utf-8")
                 else:
+                    print("/////BIRD DOES NOT HAVE RFID/////")
                     ID = "1111111111"
 
-                timeStamp = (int)(time.time())
-                if ID == prevID and timeStamp - prevTime < 1:
+                #timeStamp = (int)(time.time())
+                timeStamp = time.time_ns()
+                if ID == prevID and timeStamp - prevTime < 500:
+                    print("/////DUPLICATE READ/////")
                     #GPIO.output(23, False)
                     #time.sleep(.500)
                     PortRF.flushInput()
                     ID = ""
 
                 else:
+                    print("/////GOOD READ/////")
                     readCounter+=1
                     prevID = ID
                     prevTime = timeStamp
-                    logOutput.write('%s' % (ID) + '\n')
+                    logOutput.write('%s''%s' % (ID, prevTime) + '\n')
 
 
             print ('%d:%s' % (readCounter, ID))     # These prints are for testing
-            print("timestamp: ", prevTime)
+            print("timestamp diff: ", prevTime)
             print(val)
             ID = ""
             PortRF.flushInput()
@@ -230,23 +241,29 @@ def scan(logOutput):
             time.sleep(.4)
             hx.power_up()
         else:
+            logFileCount += 1
             logOutput.close()
             logStuff()
-            sendData()
-            #sendData() #remove this line after testing above if: statement
-            logOutput = open("log.out", "a")#will overwrite the current log.out file if one exists, or create one if DNE
+            if not getOnFile():
+                sendData()
+
+            logOutput = open("log0.out", "a")#will overwrite the current log.out file if one exists, or create one if DNE
             readCounter = 0
 
 
 def main():
     print("Here is Main routine")
     #sendData()
+    print("Voltage test")
+    print(voltIn.getVoltage())
+
     
     #logOutput = open("log.out", "a")   # This is the log file that will store the RFID 'ID' and a timestamp associated with it.
     #scan(logOutput) 
     rfidSensorSetup()
-    fetchData()
-    logStuff()  #breaking here because logfile DNE after one complete cycle...*********
+    #fetchData()
+    scan()
+    #logStuff()  #breaking here because logfile DNE after one complete cycle...*********
 
 if __name__ == '__main__':
     try:
