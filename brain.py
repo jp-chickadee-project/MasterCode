@@ -189,6 +189,7 @@ def scan():
     prevID = ""
     prevTime = 0
     logFileCount = 0
+    dupeInterval = 500000000
 
     logOutput = open("log0.out", "a")
 
@@ -202,6 +203,7 @@ def scan():
             #val = 60
             #if hx.get_weight(5) > 50:
             if val > 50 or val < -50:
+                timeStamp = time.time_ns()
                 print("/////BIRD ON LOADCELL/////")
                 print("/////SCANNING FOR RFID/////")
                 read_byte = PortRF.read()
@@ -216,11 +218,11 @@ def scan():
                     ID = "1111111111"
 
                 #timeStamp = (int)(time.time())
-                timeStamp = time.time_ns()
-                if ID == prevID and timeStamp - prevTime < 500:
+                if ID == prevID and timeStamp - prevTime < dupeInterval:
                     print("/////DUPLICATE READ/////")
                     #GPIO.output(23, False)
                     #time.sleep(.500)
+                    print("Time diff-Dupe-: " + '%s' % (timeStamp - prevTime))
                     PortRF.flushInput()
                     ID = ""
 
@@ -228,17 +230,18 @@ def scan():
                     print("/////GOOD READ/////")
                     readCounter+=1
                     prevID = ID
+                    print("Time diff-Good Read-: " + '%s' % (timeStamp - prevTime))
                     prevTime = timeStamp
-                    logOutput.write('%s''%s' % (ID, prevTime) + '\n')
+                    logOutput.write('%s''%s' % (ID, round(prevTime / 1000000000)) + '\n')
 
 
             print ('%d:%s' % (readCounter, ID))     # These prints are for testing
-            print("timestamp diff: ", prevTime)
+            print("timestamp in seconds", round(prevTime))
             print(val)
             ID = ""
             PortRF.flushInput()
             hx.power_down()
-            time.sleep(.4)
+            time.sleep(.05)
             hx.power_up()
         else:
             logFileCount += 1
