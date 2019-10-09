@@ -191,13 +191,18 @@ def scan():
     logFileCount = 0
     dupeInterval = 500000000
 
+    voltageCheck()
+    voltTimestamp = time.time()
+
     logOutput = open("log0.out", "a")
 
     while True:
+        if(time.time() - voltTimestamp > 600.0):
+            voltageCheck()
         if readCounter < 100:
             print("////////////////////////////////////////////////")
-            val = hx.get_weight(1) #uncomment
-            val2 = hx.get_weight(1) #uncomment
+            val = hx.get_weight(5) #uncomment Difference between 1 and 5??
+            val2 = hx.get_weight(5) #uncomment
             if val2 < val: #uncomment
                 val = val2 #uncomment
             #val = 60
@@ -254,11 +259,21 @@ def scan():
             readCounter = 0
 
 
+def voltageCheck():
+    print("Voltage test")
+    voltage = voltIn.getVoltage()
+    print(voltage)
+
+    if voltage <= 11:
+        #GPIO.cleanup()
+        #os.system("shutdown now")
+        print("SHUTDOWN")
+
+
 def main():
     print("Here is Main routine")
     #sendData()
-    print("Voltage test")
-    print(voltIn.getVoltage())
+    #voltageCheck()
 
     
     #logOutput = open("log.out", "a")   # This is the log file that will store the RFID 'ID' and a timestamp associated with it.

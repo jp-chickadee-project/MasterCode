@@ -111,16 +111,35 @@ class HX711:
         np_arr8 = self.read_np_arr8()
         np_arr32 = np_arr8.view('uint32')
         self.lastVal = np_arr32
-#        print(np_arr8)
- #       print(np_arr32)
+        #print(np_arr8)
+        #print("np_arr32: %s" % (np_arr32))
         return self.lastVal
 
     def read_average(self, times=3):
+
+        arr = []
+
+        #values = numpy.array(arr)
+        for i in range(times):
+            arr.append(self.read_long())
+        
+        values = numpy.array(arr)
+        mean = numpy.mean(values, axis=0)
+        sd = numpy.std(values, axis=0)
+
+        final_list = [x for x in arr if (x > mean - 1.5 * sd)]
+        final_list = [x for x in final_list if (x < mean + 1.5 * sd)]
+
+        return numpy.average(final_list)
+
+        #return values / times
+
+        '''def read_average(self, times=3):
         values = 0
         for i in range(times):
             values += self.read_long()
 
-        return values / times
+        return values / times'''
 
     def get_value(self, times=3):
         val = self.read_average(times) - self.OFFSET

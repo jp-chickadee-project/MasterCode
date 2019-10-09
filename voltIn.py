@@ -85,10 +85,10 @@ def getVoltage():
             read_adc = adctot / reps / 1.0
 
         volts = (1.41 / 93.4) * read_adc + .0195289079
-        GPIO.cleanup()
+        #GPIO.cleanup()
         return round(volts, 2)
     except:
-        GPIO.cleanup()
+        #GPIO.cleanup()
         print("Could not get volts")
 
 
