@@ -15,7 +15,7 @@ from hx711 import HX711
 #import RFID
 
 # change log.out. Will only need the filepath, not a hardcoded .out file.
-PortRF = serial.Serial('/dev/serial0', 9600, timeout=.2)     # /dev/serial0 is the RFID setup..
+#PortRF = serial.Serial('/dev/serial0', 9600)     # /dev/serial0 is the RFID setup..
 backupDirectory = "/home/pi/MasterCode/backup/log0.out"
 transmitDirectory = "/home/pi/MasterCode/transmit/log0.out"
 logFilePath = "/home/pi/MasterCode/log0.out"
@@ -76,57 +76,54 @@ def getTranLogFile(): # Gets most recent log.out file.
 def fetchData():
     print("fetching data from RFID antenna\n")
     
-    PortRF = serial.Serial('/dev/serial0',9600)     # /dev/serial0 is the ..... Find out.
+    PortRF = serial.Serial('/dev/serial0',9600, timeout = 5)     # /dev/serial0 is the ..... Find out.
+    print(PortRF)
+    print("^ serial")
     readCounter = 0
     ID = ""
     prevID = ""
     prevTime = 0
     logFileCount = 0
 
-    while True:
-        if readCounter < 5:
-            read_byte = PortRF.read()
-            if read_byte==b'\x02':
-                for bCounter in range(10):
-                    read_byte=PortRF.read()
-                    ID = ID + read_byte.decode("utf-8")
-                
-                timeStamp = (int)(time.time())
-                if ID == prevID and timeStamp - prevTime < 2:
-                    GPIO.output(12, False)
-                    time.sleep(.500)
-                    PortRF.flushInput()
-                    ID = ""
-                    continue
-                prevID = ID
-                prevTime = timeStamp
+    logOutput = open("log0.out", "a")
 
-                GPIO.output(12, True)
-                readCounter += 1
-                #print ('%d:%s:%a' %(readCounter, ID, timeStamp))
-                logOutput = open("log0.out", "a")   # This is the log file that will store the RFID 'ID' and a timestamp associated with it.
-                logOutput.write('%s''%s' % (ID,prevTime) + '\n')
-                #logOutput.write(' time: %d' % (prevTime) + '\n')
-                print ('%d:%s' % (readCounter, ID))     # These prints are for testing
-                print("prevTime: ", prevTime)           # Same here.
-                """r = requests.post("http://euclid.nmu.edu:18155/api/visits/", 
-                    data = {
-                        "rfid": ID,
-                        "feederID": "CLIF",
-                        "visitTimestamp": int(time.time()),
-                        "temperature": 0,
-                        "mass": 108,
-                        "bandCombo":"#a0/V"
-                    }
-                )
-                print("status code:" + str(r.status_code))
-                print(r.text)"""
-                ID = ""
-                print("//////////////////////////////")
-                logOutput.close()       # close file just before sleep. Should allow enough time to reopen.. (idk if thats a thing)
-                time.sleep(.50)
-                GPIO.output(12, False)
-                PortRF.flushInput()
+    while True:
+        if readCounter < 100:
+            print("waiting for read")
+            read_byte = PortRF.read()
+            if read_byte:
+                print("There's a read byte")
+                if read_byte==b'\x02':
+                    print("Read byte is \\x02")
+                    for bCounter in range(10):
+                        print(read_byte)
+                        read_byte=PortRF.read()
+                        ID = ID + read_byte.decode('utf-8')
+                
+                    timeStamp = (int)(time.time())
+                    '''if ID == prevID and timeStamp - prevTime < 2:
+                        GPIO.output(12, False)
+                        time.sleep(.500)
+                        PortRF.flushInput()
+                        ID = ""
+                        continue'''
+
+                    prevID = ID
+                    prevTime = timeStamp
+                    GPIO.output(12, True)
+                    readCounter += 1
+                    #print ('%d:%s:%a' %(readCounter, ID, timeStamp))
+                    #logOutput = open("log0.out", "a")   # This is the log file that will store the RFID 'ID' and a timestamp associated with it.
+                    logOutput.write('%s''%s' % (ID,prevTime) + '\n')
+                    #logOutput.write(' time: %d' % (prevTime) + '\n')
+                    print ('%d:%s' % (readCounter, ID))     # These prints are for testing
+                    print("prevTime: ", prevTime)           # Same here.
+                    ID = ""
+                    print("//////////////////////////////")
+                    #logOutput.close()       # close file just before sleep. Should allow enough time to reopen.. (idk if thats a thing)
+                    #time.sleep(.50)
+                    GPIO.output(12, False)
+                    PortRF.reset_input_buffer()
         else:
             logFileCount += 1
             logOutput.close()
@@ -272,15 +269,16 @@ def voltageCheck():
 
 def main():
     print("Here is Main routine")
-    #sendData()
+    rfidSensorSetup()
     #voltageCheck()
+    fetchData()
 
     
     #logOutput = open("log.out", "a")   # This is the log file that will store the RFID 'ID' and a timestamp associated with it.
     #scan(logOutput) 
-    rfidSensorSetup()
+    #rfidSensorSetup()
     #fetchData()
-    scan()
+    #scan()
     #logStuff()  #breaking here because logfile DNE after one complete cycle...*********
 
 if __name__ == '__main__':
