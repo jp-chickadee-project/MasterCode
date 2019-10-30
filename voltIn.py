@@ -27,6 +27,8 @@ SPIMISO = 22
 SPIMOSI = 16
 SPICS = 27
 
+voltagePins = [SPICLK, SPIMISO, SPIMOSI, SPICS]
+
 #Set up ports
 GPIO.setup(SPIMOSI, GPIO.OUT)
 GPIO.setup(SPIMISO, GPIO.IN)
