@@ -25,6 +25,7 @@ import os
 import RPi.GPIO as GPIO
 import re
 import voltIn
+from datetime import datetime
 from hx711 import HX711
 
 PortRF = serial.Serial('/dev/serial0', 9600, timeout = 5)
@@ -160,7 +161,7 @@ def logStuff():
         newestLogNum = getTranLogFile()
         newestLogNum = int(newestLogNum) + 1
         tmp = replacer(tmpString, str(newestLogNum), 3) # new file name to save as into /backup and /transmit
-        backupLog = backup2Directory + tmp
+        backupLog = backup2Directory + datetime.now().strftime("%Y-%m-%d@%H:%M:%S") + '.out'
         transmitLog = transmit2Directory + tmp
         print("newTmp: ", tmp)
         shutil.copy(logFilePath,backupLog)
@@ -194,6 +195,7 @@ def main():
     rfidSensorSetup()
     voltageCheck()
     fetchData()
+    cleanAndExit()
 
 
 if __name__ == '__main__':
