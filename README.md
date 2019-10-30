@@ -7,7 +7,7 @@ The goal of this repository is to act as the "brains" of JPCP field nodes.
 	Will shutdown the system if battery gets too low.
 	Calls the transmit program found in ~/lmic-rpi-lora-gps-hat/examples/transmit.
 	
-### TODO:
+##### TODO:
 	Integrate Loadcell
 	Integrate LTE
 	
@@ -16,7 +16,7 @@ The goal of this repository is to act as the "brains" of JPCP field nodes.
 	Simple custom library to read and interpret the
 	MPC3002 Analogue to Digital Converter(ADC).
 
-### TODO:
+##### TODO:
 	Clean.
 	Docstrings.
 
