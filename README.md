@@ -1,3 +1,4 @@
+[![CodeFactor](https://www.codefactor.io/repository/github/jp-chickadee-project/mastercode/badge/jon_dev)](https://www.codefactor.io/repository/github/jp-chickadee-project/mastercode/overview/jon_dev)
 # MasterCode JP Chickadee Project Field Node Code
 
 The goal of this repository is to act as the "brains" of JPCP field nodes.
