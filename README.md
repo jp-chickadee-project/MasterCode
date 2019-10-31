@@ -15,10 +15,9 @@ The goal of this repository is to act as the "brains" of JPCP field nodes.
 ## voltIn.py - Battery Testing Library
 	Simple custom library to read and interpret the
 	MPC3002 Analogue to Digital Converter(ADC).
-	[Datasheet for MCP3002 ADC]
+	[Datasheet for mCP3002 ADC]ww1.microship.com/downloads/en/DeviceDoc/21294C.pdf
 
 ##### TODO:
 	Clean.
 	Docstrings.
 
-[1]: ww1.microship.com/downloads/en/DeviceDoc/21294C.pdf
