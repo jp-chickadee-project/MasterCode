@@ -35,7 +35,7 @@ transmit2Directory = "/home/pi/MasterCode/transmit/"
 dupeCheckInterval = 500000000 # .5 seconds 
 voltageCheckInterval = 600 # 600 seconds
 counterThreshold = 100
-voltageThreshold = 11
+voltageThreshold = 10.6
 
 def cleanAndExit():
     "Closes serial ports and cleans up the GPIO pins."
@@ -121,7 +121,7 @@ def fetchData():
                 
                     timeStamp = (time.time_ns())
                     if ID == prevID and timeStamp - prevTime < dupeCheckInterval:
-                        PortRF.flushInput()
+                        PortRF.reset_input_buffer()
                         ID = ""
                         continue
 
@@ -136,6 +136,9 @@ def fetchData():
                     print("//////////////////////////////")
                     GPIO.output(12, False)
                     PortRF.reset_input_buffer()
+                    
+                
+            time.sleep(.05)
         else:
             logFileCount += 1
             logOutput.close()
@@ -180,14 +183,11 @@ def logStuff():
 
 def voltageCheck():
     """Checks the voltage using voltIn.getVoltage, shutdown the system if voltage is below voltageThreshold."""
-    print("Voltage test")
     voltage = voltIn.getVoltage()
-    print(voltage)
 
     if voltage <= voltageThreshold:
-        #GPIO.cleanup()
-        #os.system("shutdown now")
-        print("SHUTDOWN")
+        GPIO.cleanup()
+        subprocess.call(["shutdown"])
 
 
 def main():
@@ -203,5 +203,4 @@ if __name__ == '__main__':
         main()
     except KeyboardInterrupt:
         cleanAndExit()
-
 
