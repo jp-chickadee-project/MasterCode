@@ -35,7 +35,7 @@ transmit2Directory = "/home/pi/MasterCode/transmit/"
 dupeCheckInterval = 500000000 # .5 seconds 
 voltageCheckInterval = 600 # 600 seconds
 counterThreshold = 100
-voltageThreshold = 10.6
+voltageThreshold = 12
 
 def cleanAndExit():
     "Closes serial ports and cleans up the GPIO pins."
@@ -106,7 +106,7 @@ def fetchData():
     while PortRF.is_open:
         currentVoltageTime = time.time()
         if(currentVoltageTime - prevVoltageTime > voltageCheckInterval):
-            voltageCheck()
+           #voltageCheck()
             prevVoltageTime = voltageTime
 
         if readCounter < counterThreshold:
@@ -187,7 +187,7 @@ def voltageCheck():
 
     if voltage <= voltageThreshold:
         GPIO.cleanup()
-        subprocess.call(["shutdown"])
+        subprocess.call(["/binshutdown"])
 
 
 def main():

@@ -46,21 +46,16 @@ while True:
         # print binary_string + " " + np_arr8_string
 
         # Prints the weight. Comment if you're debbuging the MSB and LSB issue.
-        total = 0
-        for i in range(0, 100):
-            val = hx.get_weight(15)
-            print("%s: %s" % (i, val))
-            total += val
-            hx.power_down()
-            time.sleep(.5)
-            hx.power_up()
-            #time.sleep(.05)
 
-        print(total / 100)
+        val = hx.get_weight(15)
+        hx.power_down()
+        time.sleep(.5)
+        hx.power_up()
+        #time.sleep(.05)
 
         #print(hx.get_weight(15))
 
-        #print ("val = %s" % (val))
+        print ("val = %s" % (val))
 
         '''hx.power_down()
         hx.power_up()
